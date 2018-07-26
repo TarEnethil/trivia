@@ -121,6 +121,9 @@
         {{ trivia.description }}
         <p class="category">
             {{ categories[trivia.category]["name"] }}
+            {% if trivia.sent_by %}
+                // von {{ trivia.sent_by }}
+            {% endif %}
         </p>
     </div>
 

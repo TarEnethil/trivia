@@ -21,7 +21,7 @@ def before_request():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for("index"))
+        return redirect(url_for("trivia.index"))
 
     form = LoginForm()
 
@@ -36,7 +36,7 @@ def login():
             next_page = request.args.get('next')
 
             if not next_page or url_parse(next_page).netloc != '':
-                next_page = url_for("index")
+                next_page = url_for("trivia.index")
 
             return redirect(next_page)
 
@@ -45,7 +45,7 @@ def login():
 @app.route("/logout")
 def logout():
     logout_user()
-    return redirect(url_for("index"))
+    return redirect(url_for("trivia.index"))
 
 @app.route("/__install__", methods=["GET", "POST"])
 def install():
@@ -79,12 +79,12 @@ def install():
 
             flash("Install successful. You can now log in and check the settings.")
 
-            return redirect(url_for("index"))
+            return redirect(url_for("trivia.index"))
 
         return render_template("install.html", form=form, title="Install")
     else:
         flash("Setup was already executed.")
-        return redirect(url_for("index"))
+        return redirect(url_for("trivia.index"))
 
 @app.route("/static_files/<path:filename>")
 def static_files(filename):

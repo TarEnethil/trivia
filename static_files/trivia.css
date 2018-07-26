@@ -17,3 +17,7 @@
 .panel-footer {
     background-color:rgba(180, 180, 180, 0.25) !important;
 }
+
+.panel-heading {
+    font-weight: bold;
+}
