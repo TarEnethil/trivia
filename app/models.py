@@ -80,6 +80,9 @@ class Trivia(db.Model):
             'category' : self.category_name()
         }
 
+        if self.sent_by:
+            data['sent_by'] = self.sent_by
+
         return data
 
 @login.user_loader
