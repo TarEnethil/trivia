@@ -1,6 +1,6 @@
 from app import app
 from flask import flash, redirect
-from app.models import GeneralSetting
+from app.models import GeneralSetting, Trivia
 from flask_login import current_user
 from werkzeug import secure_filename
 from wtforms.validators import ValidationError
@@ -18,6 +18,12 @@ def page_title(dynamic_part=None):
         return static_part + " - " + dynamic_part
     else:
         return static_part
+
+def get_published_count():
+    q = Trivia.query.filter(Trivia.lane == 3)
+    # count_q = q.statement.with_only_columns([func.count()]).order_by(None)
+    # count = q.session.execute(count_q).scalar()
+    return str(q.count())
 
 class LessThanOrEqual(object):
     def __init__(self, comp_value_field_name):

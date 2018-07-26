@@ -1,0 +1,11 @@
+.trivia .navbar-right {
+    margin-right:0px;
+}
+
+.trivia .category {
+    margin-bottom:-10px;
+    font-size:0.8em;
+    font-weight:bold;
+    font-style:italic;
+    text-align:right;
+}

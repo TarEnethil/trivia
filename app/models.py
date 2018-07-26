@@ -49,6 +49,21 @@ class Trivia(db.Model):
     def category_color(self):
         return Category.query.get(self.category).color
 
+    def is_lane(self, id):
+        return self.lane == id
+
+    def is_new_lane(self):
+        return self.is_lane(1)
+
+    def is_ongoing_lane(self):
+        return self.is_lane(2)
+
+    def is_published_lane(self):
+        return self.is_lane(3)
+
+    def is_cancelled_lane(self):
+        return self.is_lane(4)
+
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))

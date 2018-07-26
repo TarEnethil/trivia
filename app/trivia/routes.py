@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify, send_from_directory
 from app import app, db
 from app.trivia import bp
-from app.helpers import page_title, redirect_non_admins
+from app.helpers import page_title, redirect_non_admins, get_published_count
 from app.trivia.forms import CategoryForm, TriviaForm
 from app.models import User, Category, Trivia
 from flask_login import current_user, login_required
@@ -12,11 +12,32 @@ import os
 @bp.route("/")
 @login_required
 def index():
-    lane1 = Trivia.query.filter(Trivia.lane==1)
-    lane2 = Trivia.query.filter(Trivia.lane==2)
-    lane3 = Trivia.query.filter(Trivia.lane==3).order_by(Trivia.lane_switch_ts).limit(5)
+    lane1 = Trivia.query.filter(Trivia.lane==1).order_by(Trivia.lane_switch_ts.desc())
+    lane2 = Trivia.query.filter(Trivia.lane==2).order_by(Trivia.lane_switch_ts.desc())
+    lane3 = Trivia.query.filter(Trivia.lane==3).order_by(Trivia.lane_switch_ts.desc()).limit(5)
 
-    return render_template("trivia/index.html", lane1=lane1, lane2=lane2, lane3=lane3, title=page_title("Trivia"))
+    cq = Category.query.all()
+
+    categories = {}
+
+    for c in cq:
+        categories[c.id] = { "color": c.color, "name": c.name }
+
+    return render_template("trivia/index.html", lane1=lane1, lane2=lane2, lane3=lane3, categories=categories, title=page_title("Oppa kanban-style"))
+
+@bp.route("/lane/<int:id>")
+@login_required
+def lane(id):
+    lane = Trivia.query.filter(Trivia.lane==id).order_by(Trivia.lane_switch_ts.desc())
+
+    cq = Category.query.all()
+
+    categories = {}
+
+    for c in cq:
+        categories[c.id] = { "color": c.color, "name": c.name }
+
+    return render_template("trivia/lane.html", lane=lane, categories=categories, lane_id=id, title=page_title("Lane " + str(id)))
 
 @bp.route("/create", methods=["GET", "POST"])
 @login_required
@@ -40,10 +61,10 @@ def create_trivia():
         db.session.add(trivia)
         db.session.commit()
 
-        Flash("Trivia was created.")
+        flash("Trivia was created.")
         return redirect(url_for("trivia.index"))
 
-    return render_template("trivia/trivia.html", form=form)
+    return render_template("trivia/trivia.html", form=form, title=page_title("Create new trivia"))
 
 @bp.route("/edit/<int:id>", methods=["GET", "POST"])
 @login_required
@@ -67,14 +88,22 @@ def edit_trivia(id):
         trivia.title = form.title.data
         trivia.description = form.description.data
 
+        published = False
+
         if trivia.lane != form.lane.data:
-            trivia.lane_switch_ts = datetime.utcnow
+            trivia.lane_switch_ts = datetime.utcnow()
+
+            if form.lane.data == 3:
+                published = True
 
         trivia.lane = form.lane.data
         trivia.category = form.category.data
         db.session.commit()
 
         flash("Trivia was edited")
+        if published:
+            return redirect(url_for("trivia.lane_publish", id=trivia.id))
+
         return redirect(url_for("trivia.index"))
 
     form.title.data = trivia.title
@@ -82,20 +111,61 @@ def edit_trivia(id):
     form.lane.data = trivia.lane
     form.category.data = trivia.category
 
-    return render_template("trivia/trivia.html", form=form)
+    return render_template("trivia/trivia.html", form=form, title=page_title("Edit trivia"))
+
+@bp.route("/ongoing/<int:id>", methods=["GET", "POST"])
+@login_required
+def lane_ongoing_trivia(id):
+    trivia = Trivia.query.get(id)
+
+    trivia.lane = 2
+    trivia.lane_switch_ts = datetime.utcnow()
+
+    flash("Trivia switched to lane ongoing.")
+    db.session.commit()
+
+    return redirect(url_for("trivia.index"))
+
+@bp.route("/cancel/<int:id>", methods=["GET", "POST"])
+@login_required
+def lane_cancelled_trivia(id):
+    trivia = Trivia.query.get(id)
+
+    trivia.lane = 4
+    trivia.lane_switch_ts = datetime.utcnow()
+
+    flash("Trivia switched to lane cancelled.")
+    db.session.commit()
+
+    return redirect(url_for("trivia.index"))
+
+@bp.route("/new/<int:id>", methods=["GET", "POST"])
+@login_required
+def lane_new_trivia(id):
+    trivia = Trivia.query.get(id)
+
+    trivia.lane = 1
+    trivia.lane_switch_ts = datetime.utcnow()
+
+    flash("Trivia switched to lane new.")
+    db.session.commit()
+
+    return redirect(url_for("trivia.index"))
 
 @bp.route("/publish/<int:id>", methods=["GET", "POST"])
 @login_required
-def publish_trivia(id):
+def lane_publish_trivia(id):
     trivia = Trivia.query.get(id)
 
     trivia.lane = 3
-    trivia.lane_switch_ts = datetime.utcnow
+    trivia.lane_switch_ts = datetime.utcnow()
+
+    trivia.description = "Trivia #" + get_published_count() + ": "
 
     flash("Trivia published.")
     db.session.commit()
 
-    return render_template("trivia/trivia.html", form=form)
+    return redirect(url_for("trivia.index"))
 
 @bp.route("/settings", methods=["GET", "POST"])
 @login_required
