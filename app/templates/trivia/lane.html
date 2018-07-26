@@ -26,7 +26,7 @@
     </div>
 
     <div class="panel-footer">
-        {% if not trivia.is_published_lane() %}
+        {% if not trivia.is_published_lane() and not trivia.is_cancelled_lane() %}
         <a href="{{ url_for('trivia.lane_cancelled_trivia', id=trivia.id) }}" class="btn btn-danger">
             <span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span>
             Cancel
@@ -48,13 +48,13 @@
                 New
             </a>
             {% endif %}
-            {% if not trivia.is_ongoing_lane() %}
-            <a href="{{ url_for('trivia.lane_ongoing_trivia', id=trivia.id) }}" class="btn btn-default">
+            {% if not trivia.is_ready_lane() %}
+            <a href="{{ url_for('trivia.lane_ready_trivia', id=trivia.id) }}" class="btn btn-default">
                 <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
-                Ongoing
+                Ready
             </a>
             {% endif %}
-            {% if not trivia.is_published_lane() %}
+            {% if not trivia.is_published_lane() and not trivia.is_cancelled_lane() %}
             <a href="{{ url_for('trivia.lane_publish_trivia', id=trivia.id) }}" class="btn btn-success">
                 <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
                 Publish

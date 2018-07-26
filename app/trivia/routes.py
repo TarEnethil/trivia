@@ -131,15 +131,15 @@ def edit_trivia(id):
 
     return render_template("trivia/trivia.html", form=form, title=page_title("Edit trivia"))
 
-@bp.route("/ongoing/<int:id>", methods=["GET", "POST"])
+@bp.route("/ready/<int:id>", methods=["GET", "POST"])
 @login_required
-def lane_ongoing_trivia(id):
+def lane_ready_trivia(id):
     trivia = Trivia.query.get(id)
 
     trivia.lane = 2
     trivia.lane_switch_ts = datetime.utcnow()
 
-    flash("Trivia switched to lane ongoing.")
+    flash("Trivia switched to lane ready.")
     db.session.commit()
 
     return redirect(url_for("trivia.index"))

@@ -65,7 +65,7 @@ class Trivia(db.Model):
     def is_new_lane(self):
         return self.is_lane(1)
 
-    def is_ongoing_lane(self):
+    def is_ready_lane(self):
         return self.is_lane(2)
 
     def is_published_lane(self):

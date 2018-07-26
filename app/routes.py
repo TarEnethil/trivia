@@ -57,7 +57,7 @@ def install():
             db.session.add(setting)
 
             lane1 = Lane(name="New")
-            lane2 = Lane(name="Ongoing")
+            lane2 = Lane(name="Ready")
             lane3 = Lane(name="Published")
             lane4 = Lane(name="Cancelled")
 
