@@ -35,6 +35,7 @@ class Category(db.Model):
     __tablename__ = "categories"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
+    abbr = db.Column(db.String(10))
     color = db.Column(db.String(10))
 
 class Lane(db.Model):
@@ -47,6 +48,7 @@ class Trivia(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200))
     description = db.Column(db.String(5000))
+    sent_by = db.Column(db.String(64))
     lane_switch_ts = db.Column(db.DateTime, default=datetime.utcnow)
     category = db.Column(db.Integer, db.ForeignKey("users.id"))
     lane = db.Column(db.Integer, db.ForeignKey("lanes.id"), default=1)

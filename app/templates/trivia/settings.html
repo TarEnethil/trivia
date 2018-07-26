@@ -12,6 +12,7 @@
         <thead>
             <tr>
                 <td>Name</td>
+                <td>Abbreviation</td>
                 <td>Actions</td>
             </tr>
         </thead>
@@ -24,6 +25,7 @@
                 {% endif %}
                 <td>  {{ category.name  }}
                 </td>
+                <td>{{ category.abbr }}</td>
                 <td>
                     <a href="{{ url_for('trivia.category_edit', id=category.id) }}" class="btn btn-default">
                         <span class="glpyhicon glyphicon-pencil" aria-hidden="true"></span>

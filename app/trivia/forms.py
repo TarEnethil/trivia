@@ -8,12 +8,14 @@ from wtforms_components import ColorField
 
 class CategoryForm(FlaskForm):
     name = StringField("Name", validators=[DataRequired(), Length(max=64)])
+    abbr = StringField("Abbreviation", validators=[DataRequired()])
     color = ColorField("Color")
 
     submit = SubmitField("submit")
 
 class TriviaForm(FlaskForm):
     title = StringField("Title", validators=[InputRequired()])
+    sent_by = StringField("Sent by")
     description = TextAreaField("Description", render_kw={"rows": 15})
 
     lane = SelectField("Lane", coerce=int)

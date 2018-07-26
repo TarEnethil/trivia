@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify, send_from_directory
 from app import app, db
 from app.trivia import bp
-from app.helpers import page_title, redirect_non_admins, get_published_count
+from app.helpers import page_title, redirect_non_admins, get_published_count, get_published_count_cat
 from app.trivia.forms import CategoryForm, TriviaForm
 from app.models import User, Category, Trivia, Lane
 from flask_login import current_user, login_required
@@ -65,7 +65,7 @@ def create_trivia():
     form.category.choices = cat_choices
 
     if form.validate_on_submit():
-        trivia = Trivia(title=form.title.data, description=form.description.data, category=form.category.data, lane=form.lane.data)
+        trivia = Trivia(title=form.title.data, description=form.description.data, category=form.category.data, lane=form.lane.data, sent_by=form.sent_by.data)
         db.session.add(trivia)
         db.session.commit()
 
@@ -102,6 +102,7 @@ def edit_trivia(id):
     if form.validate_on_submit():
         trivia.title = form.title.data
         trivia.description = form.description.data
+        trivia.sent_by = form.sent_by.data
 
         published = False
 
@@ -125,6 +126,7 @@ def edit_trivia(id):
     form.description.data = trivia.description
     form.lane.data = trivia.lane
     form.category.data = trivia.category
+    form.sent_by.data = trivia.sent_by
 
     return render_template("trivia/trivia.html", form=form, title=page_title("Edit trivia"))
 
@@ -175,7 +177,18 @@ def lane_publish_trivia(id):
     trivia.lane = 3
     trivia.lane_switch_ts = datetime.utcnow()
 
-    trivia.description = "Trivia #" + get_published_count() + ": "
+    prepend = "Trivia #" + get_published_count()
+
+    if trivia.category != 1:
+        c = Category.query.get(trivia.category)
+        prepend += ", " + c.abbr + " #" + get_published_count_cat(trivia.category)
+
+    if trivia.sent_by:
+        prepend += ", Fremdeinsendung von " + trivia.sent_by
+
+    prepend += ":"
+
+    trivia.description = prepend + trivia.description
 
     flash("Trivia published.")
     db.session.commit()
@@ -199,7 +212,7 @@ def category_create():
     form = CategoryForm()
 
     if form.validate_on_submit():
-        new_cat = Category(name=form.name.data, color=form.color.data.hex)
+        new_cat = Category(name=form.name.data, color=form.color.data.hex, abbr=form.abbr.data)
 
         db.session.add(new_cat)
         db.session.commit()
@@ -220,6 +233,7 @@ def category_edit(id):
     if form.validate_on_submit():
         category.name = form.name.data
         category.color = form.color.data.hex
+        category.abbr = form.abbr.data
 
         db.session.commit()
         flash('"' + form.name.data + '" was successfully edited.')
@@ -227,6 +241,7 @@ def category_edit(id):
 
     form.name.data = category.name
     form.color.data = category.color
+    form.abbr.data = category.abbr
     return render_template("trivia/category.html", form=form, category=category, title=page_title("Edit category"))
 
 @bp.route("/api/latest", methods=["GET"])

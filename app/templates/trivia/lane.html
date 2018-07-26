@@ -13,7 +13,10 @@
 {% for trivia in lane_content %}
 
 <div class="panel panel-default trivia" style="background-color:{{ trivia.category_color() }}">
-    <div class="panel-heading">{{ trivia.title }}</div>
+    <div class="panel-heading">{{ trivia.title }}
+    {% if trivia.sent_by and not trivia.is_published_lane() %}
+        (by {{ trivia.sent_by }})
+    {% endif %}</div>
 
     <div class="panel-body">
         {{ trivia.description }}

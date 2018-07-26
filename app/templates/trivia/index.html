@@ -28,7 +28,11 @@
 {% for trivia in lane1 %}
 
 <div class="panel panel-default trivia" style="background-color:{{ trivia.category_color() }}">
-    <div class="panel-heading">{{ trivia.title }}</div>
+    <div class="panel-heading">{{ trivia.title }}
+    {% if trivia.sent_by %}
+        (by {{ trivia.sent_by }})
+    {% endif %}
+    </div>
 
     <div class="panel-body">
         {{ trivia.description }}
@@ -70,7 +74,11 @@
     {% for trivia in lane2 %}
 
 <div class="panel panel-default trivia" style="background-color:{{ trivia.category_color() }}">
-    <div class="panel-heading">{{ trivia.title }}</div>
+    <div class="panel-heading">{{ trivia.title }}
+    {% if trivia.sent_by %}
+        (by {{ trivia.sent_by }})
+    {% endif %}
+    </div>
 
     <div class="panel-body">
         {{ trivia.description }}

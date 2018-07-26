@@ -91,6 +91,9 @@ def install():
             db.session.add(lane3)
             db.session.add(lane4)
 
+            cat1 = Category(name="Standard", color="#FFF9D0", abbr="std")
+            db.session.add(cat1)
+
             admin = User(username=form.admin_name.data)
             admin.set_password(form.admin_password.data)
             admin.must_change_password = False

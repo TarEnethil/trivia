@@ -25,6 +25,10 @@ def get_published_count():
     # count = q.session.execute(count_q).scalar()
     return str(q.count())
 
+def get_published_count_cat(cat_id):
+    q = Trivia.query.filter(Trivia.lane == 3).filter(Trivia.category == cat_id)
+    return str(q.count())
+
 class LessThanOrEqual(object):
     def __init__(self, comp_value_field_name):
         self.comp_value_field_name = comp_value_field_name
