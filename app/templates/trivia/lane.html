@@ -9,8 +9,8 @@
 {% block content %}
 
 <div class="container">
-<h2>Lane {{ lane_id }}</h2>
-{% for trivia in lane %}
+<h2>Lane {{ lane_name }}</h2>
+{% for trivia in lane_content %}
 
 <div class="panel panel-default trivia" style="background-color:{{ trivia.category_color() }}">
     <div class="panel-heading">{{ trivia.title }}</div>

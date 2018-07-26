@@ -3,7 +3,7 @@ from app import app, db
 from app.trivia import bp
 from app.helpers import page_title, redirect_non_admins, get_published_count
 from app.trivia.forms import CategoryForm, TriviaForm
-from app.models import User, Category, Trivia
+from app.models import User, Category, Trivia, Lane
 from flask_login import current_user, login_required
 from werkzeug import secure_filename
 from datetime import datetime
@@ -28,7 +28,8 @@ def index():
 @bp.route("/lane/<int:id>")
 @login_required
 def lane(id):
-    lane = Trivia.query.filter(Trivia.lane==id).order_by(Trivia.lane_switch_ts.desc())
+    lane_content = Trivia.query.filter(Trivia.lane==id).order_by(Trivia.lane_switch_ts.desc())
+    lane_name = Lane.query.get(id).name
 
     cq = Category.query.all()
 
@@ -37,7 +38,7 @@ def lane(id):
     for c in cq:
         categories[c.id] = { "color": c.color, "name": c.name }
 
-    return render_template("trivia/lane.html", lane=lane, categories=categories, lane_id=id, title=page_title("Lane " + str(id)))
+    return render_template("trivia/lane.html", lane_content=lane_content, categories=categories, lane_name=lane_name, title=page_title("Lane " + str(id)))
 
 @bp.route("/create", methods=["GET", "POST"])
 @login_required
@@ -46,7 +47,14 @@ def create_trivia():
 
     form = TriviaForm()
 
-    form.lane.choices = [(1, "New"), (2, "Ongoing"), (3, "Published"), (4, "Cancelled")]
+    lq = Lane.query.all()
+
+    lanes = []
+
+    for lane in lq:
+        lanes.append((lane.id, lane.name))
+
+    form.lane.choices = lanes
 
     categories = Category.query.all()
 
@@ -74,7 +82,14 @@ def edit_trivia(id):
     form = TriviaForm()
     trivia = Trivia.query.get(id)
 
-    form.lane.choices = [(1, "New"), (2, "Ongoing"), (3, "Published"), (4, "Cancelled")]
+    lq = Lane.query.all()
+
+    lanes = []
+
+    for lane in lq:
+        lanes.append((lane.id, lane.name))
+
+    form.lane.choices = lanes
 
     categories = Category.query.all()
 
@@ -213,3 +228,13 @@ def category_edit(id):
     form.name.data = category.name
     form.color.data = category.color
     return render_template("trivia/category.html", form=form, category=category, title=page_title("Edit category"))
+
+@bp.route("/api/latest", methods=["GET"])
+def api_latest_trivia():
+    trivia = Trivia.query.filter(Trivia.lane==3).order_by(Trivia.lane_switch_ts.desc()).first_or_404()
+    return jsonify(trivia.to_dict())
+
+@bp.route("/api/<int:no>", methods=["GET"])
+def api_specific_trivia(no):
+    trivia = Trivia.query.filter(Trivia.lane==3).order_by(Trivia.lane_switch_ts.asc()).offset(no-1).first_or_404()
+    return jsonify(trivia.to_dict())

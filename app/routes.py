@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request, jsonify, s
 from app import app, db
 from app.helpers import page_title, redirect_non_admins
 from app.forms import LoginForm, SettingsForm, InstallForm
-from app.models import User, GeneralSetting
+from app.models import User, GeneralSetting, Lane
 from flask_login import current_user, login_user, login_required, logout_user
 from datetime import datetime
 from werkzeug.urls import url_parse
@@ -22,7 +22,7 @@ def before_request():
 @app.route("/index")
 @login_required
 def index():
-    return render_template("index.html", title=page_title("Home"))
+    return redirect(url_for("trivia.index"))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -80,6 +80,16 @@ def install():
         if form.validate_on_submit():
             setting = GeneralSetting(title="My Page")
             db.session.add(setting)
+
+            lane1 = Lane(name="New")
+            lane2 = Lane(name="Ongoing")
+            lane3 = Lane(name="Published")
+            lane4 = Lane(name="Cancelled")
+
+            db.session.add(lane1)
+            db.session.add(lane2)
+            db.session.add(lane3)
+            db.session.add(lane4)
 
             admin = User(username=form.admin_name.data)
             admin.set_password(form.admin_password.data)

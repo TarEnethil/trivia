@@ -37,6 +37,11 @@ class Category(db.Model):
     name = db.Column(db.String(64))
     color = db.Column(db.String(10))
 
+class Lane(db.Model):
+    __tablename__ = "lanes"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64))
+
 class Trivia(db.Model):
     __tablename__ = "trivias"
     id = db.Column(db.Integer, primary_key=True)
@@ -44,10 +49,13 @@ class Trivia(db.Model):
     description = db.Column(db.String(5000))
     lane_switch_ts = db.Column(db.DateTime, default=datetime.utcnow)
     category = db.Column(db.Integer, db.ForeignKey("users.id"))
-    lane = db.Column(db.Integer, default=1)
+    lane = db.Column(db.Integer, db.ForeignKey("lanes.id"), default=1)
 
     def category_color(self):
         return Category.query.get(self.category).color
+
+    def category_name(self):
+        return Category.query.get(self.category).name
 
     def is_lane(self, id):
         return self.lane == id
@@ -63,6 +71,14 @@ class Trivia(db.Model):
 
     def is_cancelled_lane(self):
         return self.is_lane(4)
+
+    def to_dict(self):
+        data = {
+            'fact' : self.description,
+            'category' : self.category_name()
+        }
+
+        return data
 
 @login.user_loader
 def load_user(id):
