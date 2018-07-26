@@ -18,12 +18,6 @@ def before_request():
             flash("You must change your password before proceeding")
             return redirect(url)
 
-@app.route("/")
-@app.route("/index")
-@login_required
-def index():
-    return redirect(url_for("trivia.index"))
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
@@ -52,25 +46,6 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("index"))
-
-@app.route("/settings", methods=["GET", "POST"])
-@login_required
-def settings():
-    redirect_non_admins()
-
-    form = SettingsForm()
-    settings = GeneralSetting.query.get(1)
-
-    if form.validate_on_submit():
-        settings.title = form.title.data
-
-        flash("Settings changed.")
-
-        db.session.commit()
-    else:
-        form.title.data = settings.title
-
-    return render_template("settings.html", form=form, title=page_title("General settings"))
 
 @app.route("/__install__", methods=["GET", "POST"])
 def install():

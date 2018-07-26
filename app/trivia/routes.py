@@ -3,7 +3,8 @@ from app import app, db
 from app.trivia import bp
 from app.helpers import page_title, redirect_non_admins, get_published_count, get_published_count_cat
 from app.trivia.forms import CategoryForm, TriviaForm
-from app.models import User, Category, Trivia, Lane
+from app.forms import SettingsForm
+from app.models import User, Category, Trivia, Lane, GeneralSetting
 from flask_login import current_user, login_required
 from werkzeug import secure_filename
 from datetime import datetime
@@ -186,7 +187,7 @@ def lane_publish_trivia(id):
     if trivia.sent_by:
         prepend += ", Fremdeinsendung von " + trivia.sent_by
 
-    prepend += ":"
+    prepend += ": "
 
     trivia.description = prepend + trivia.description
 
@@ -200,9 +201,21 @@ def lane_publish_trivia(id):
 def settings():
     redirect_non_admins()
 
+    form = SettingsForm()
+    settings = GeneralSetting.query.get(1)
+
+    if form.validate_on_submit():
+        settings.title = form.title.data
+
+        flash("Settings changed.")
+
+        db.session.commit()
+    else:
+        form.title.data = settings.title
+
     categories = Category.query.all()
 
-    return render_template("trivia/settings.html", categories=categories, title=page_title("Categories"))
+    return render_template("trivia/settings.html", form=form, categories=categories, title=page_title("Categories"))
 
 @bp.route("/category/create", methods=["GET", "POST"])
 @login_required

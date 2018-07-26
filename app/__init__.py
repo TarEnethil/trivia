@@ -17,6 +17,6 @@ from app.user import bp as user_bp
 app.register_blueprint(user_bp, url_prefix="/user")
 
 from app.trivia import bp as trivia_bp
-app.register_blueprint(trivia_bp, url_prefix="/trivia")
+app.register_blueprint(trivia_bp)
 
 from app import routes, models

@@ -2,6 +2,12 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
+    <h1>General setting</h1>
+
+     {{ wtf.quick_form(form) }}
+
+    <hr>
+
     <h1>Categories</h1>
     <a href="{{ url_for('trivia.category_create')}}" class="btn btn-default">
         <span class="glpyhicon glyphicon-plus" aria-hidden="true"></span>
