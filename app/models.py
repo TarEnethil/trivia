@@ -74,10 +74,15 @@ class Trivia(db.Model):
     def is_cancelled_lane(self):
         return self.is_lane(4)
 
+    def get_trivia_num(self):
+        q = Trivia.query.filter(Trivia.lane == 3).filter(Trivia.lane_switch_ts <= self.lane_switch_ts)
+        return q.count()
+
     def to_dict(self):
         data = {
             'fact' : self.description,
-            'category' : self.category_name()
+            'category' : self.category_name(),
+            'id' : self.get_trivia_num()
         }
 
         if self.sent_by:
