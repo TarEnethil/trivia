@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request, jsonify, s
 from app import app, db
 from app.helpers import page_title, redirect_non_admins
 from app.forms import LoginForm, SettingsForm, InstallForm
-from app.models import User, GeneralSetting, Lane
+from app.models import User, Category, GeneralSetting, Lane
 from flask_login import current_user, login_user, login_required, logout_user
 from datetime import datetime
 from werkzeug.urls import url_parse

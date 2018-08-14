@@ -257,12 +257,20 @@ def category_edit(id):
     form.abbr.data = category.abbr
     return render_template("trivia/category.html", form=form, category=category, title=page_title("Edit category"))
 
+@bp.route("/api/", methods=["GET"])
+def api_index():
+    return redirect(url_for("trivia.api_latest_trivia"), code=302)
+
 @bp.route("/api/latest", methods=["GET"])
 def api_latest_trivia():
     trivia = Trivia.query.filter(Trivia.lane==3).order_by(Trivia.lane_switch_ts.desc()).first_or_404()
-    return jsonify(trivia.to_dict())
+    resp = jsonify(trivia.to_dict())
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
 @bp.route("/api/<int:no>", methods=["GET"])
 def api_specific_trivia(no):
     trivia = Trivia.query.filter(Trivia.lane==3).order_by(Trivia.lane_switch_ts.asc()).offset(no-1).first_or_404()
-    return jsonify(trivia.to_dict())
+    resp = jsonify(trivia.to_dict())
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
