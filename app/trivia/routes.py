@@ -8,6 +8,7 @@ from app.models import User, Category, Trivia, Lane, GeneralSetting
 from flask_login import current_user, login_required
 from werkzeug import secure_filename
 from datetime import datetime
+from random import randint
 import os
 
 @bp.route("/")
@@ -274,3 +275,8 @@ def api_specific_trivia(no):
     resp = jsonify(trivia.to_dict())
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
+
+@bp.route("/api/random", methods=["GET"])
+def api_random_trivia():
+    n = get_published_count()
+    return redirect(url_for("trivia.api_specific_trivia", no=randint(1, int(n))))
