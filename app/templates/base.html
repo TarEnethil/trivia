@@ -14,6 +14,16 @@
             <ul class="nav navbar-nav navbar-left">
                 {% if current_user.is_authenticated %}
                 <li><a href="{{ url_for('trivia.index') }}">Trivia</a></li>
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    API  <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{ url_for('trivia.api_index') }}">Index</a></li>
+                        <li><a href="{{ url_for('trivia.api_latest_trivia') }}">Latest</a></li>
+                        <li><a href="{{ url_for('trivia.api_specific_trivia', no=1) }}">Specific</a></li>
+                    </ul>
+                </li>
                 {% endif %}
 
             </ul>
