@@ -31,3 +31,10 @@ flask run -h localhost
  * /api: redirects to /api/latest
  * /api/latest: latest published trivia
  * /api/\<id\>: trivia by id
+ * /api/random: random published trivia
+
+### Fields
+* id: publish count of this entry
+* fact: actual trivia text
+* category: category of the trivia
+* sent_by (option): person who sent in the fact (only present if field is set)
