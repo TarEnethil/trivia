@@ -48,7 +48,7 @@ def create_trivia():
 
     form = TriviaForm()
 
-    lq = Lane.query.all()
+    lq = Lane.query.filter(Lane.id != 3)
 
     lanes = []
 
