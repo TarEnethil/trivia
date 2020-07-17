@@ -4,6 +4,7 @@ from app import app, db
 from app.models import Trivia
 from app.helpers import get_published, get_random_published_id, get_published_count
 from uuid import uuid4
+from datetime import datetime
 import re
 
 import telebot
@@ -16,8 +17,20 @@ if app.config["TELEGRAM_TOKEN"] == None:
 
 bot = telebot.TeleBot(app.config["TELEGRAM_TOKEN"])
 
+def log_message(message):
+    if app.config["TELEGRAM_BOT_LOG"] == None or app.config["TELEGRAM_BOT_LOG"] == False:
+        return
+
+    if message.from_user.username:
+        user = message.from_user.username
+    else:
+        user = message.from_user.first_name
+
+    print("{}: {} sent message '{}'".format(datetime.fromtimestamp(message.date), user, message.text))
+
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
+    log_message(message)
     msg = "Hello @{}!\n\n".format(message.from_user.username)
     msg += "I am @ThorstensTriviaBot (WIP). I currently support the following commands:\n\n"
     msg += "/random, /trivia\n"
@@ -27,16 +40,21 @@ def send_welcome(message):
     msg += "\n\nThere are currently {} published facts.\n".format(get_published_count())
     msg += "If you find any bugs, feel free to report them to @TriviaThorsten or at https://tarenethil.github.com/trivia/issues"
 
+    if app.config["TELEGRAM_BOT_LOG"] == True:
+        msg += "\n\nNote: For debugging purposes, all messages are currently logged."
+
     bot.send_message(message.chat.id, msg)
 
 @bot.message_handler(commands=['random'])
 def random_trivia(message):
+    log_message(message)
     t = get_published(get_random_published_id())
 
     bot.send_message(message.chat.id, t.description)
 
 @bot.message_handler(commands=['trivia'])
 def trivia(message):
+    log_message(message)
     if message.text == "/trivia":
         random_trivia(message)
         return
@@ -64,5 +82,9 @@ def trivia(message):
         return
 
     bot.send_message(message.chat.id, t.description)
+
+@bot.message_handler(func=lambda m: True)
+def default(message):
+    log_message(message)
 
 bot.polling()
