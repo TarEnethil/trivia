@@ -18,13 +18,13 @@ bot = telebot.TeleBot(app.config["TELEGRAM_TOKEN"])
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    msg = "Hello @{}\n\n!".format(message.from_user.username)
-    msg += "I am ThorstensTriviaBot (WIP). I currently support the following commands:\n\n"
+    msg = "Hello @{}!\n\n".format(message.from_user.username)
+    msg += "I am @ThorstensTriviaBot (WIP). I currently support the following commands:\n\n"
     msg += "/random, /trivia\n"
     msg += "        get a random published fact\n"
     msg += "/trivia <number>\n"
     msg += "        get published trivia #<number>"
-    msg += "\n\nThere are currently {} published facts.".format(get_published_count())
+    msg += "\n\nThere are currently {} published facts.\n".format(get_published_count())
     msg += "If you find any bugs, feel free to report them to @TriviaThorsten or at https://tarenethil.github.com/trivia/issues"
 
     bot.send_message(message.chat.id, msg)
