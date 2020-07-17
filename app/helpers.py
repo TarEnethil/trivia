@@ -5,7 +5,7 @@ from datetime import datetime
 from flask_login import current_user
 from werkzeug import secure_filename
 from wtforms.validators import ValidationError
-from random import choice
+from random import choice, randint
 import telebot
 import os
 from uuid import uuid4
@@ -37,6 +37,13 @@ def get_ready_count():
     q = Trivia.query.filter(Trivia.lane == 2)
 
     return q.count()
+
+def get_published(no):
+    return Trivia.query.filter(Trivia.lane==3).order_by(Trivia.lane_switch_ts.asc()).offset(no-1).first_or_404()
+
+def get_random_published_id():
+    n = get_published_count()
+    return randint(1, int(n))
 
 def get_random_ready():
     q = Trivia.query.filter(Trivia.lane == 2)

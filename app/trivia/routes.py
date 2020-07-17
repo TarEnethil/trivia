@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify, send_from_directory
 from app import app, db
 from app.trivia import bp
-from app.helpers import page_title, redirect_non_admins, get_published_count, get_published_count_cat, publish_trivia, get_random_ready, send_to_owner, send_to_channel, get_ready_count, get_bot_token, gen_new_bot_token
+from app.helpers import page_title, redirect_non_admins, get_published_count, get_published_count_cat, publish_trivia, get_random_ready, send_to_owner, send_to_channel, get_ready_count, get_bot_token, gen_new_bot_token, get_random_published_id, get_published
 from app.trivia.forms import CategoryForm, TriviaForm
 from app.forms import SettingsForm
 from app.models import User, Category, Trivia, Lane, GeneralSetting
@@ -293,12 +293,12 @@ def api_latest_trivia():
 
 @bp.route("/api/<int:no>", methods=["GET"])
 def api_specific_trivia(no):
-    trivia = Trivia.query.filter(Trivia.lane==3).order_by(Trivia.lane_switch_ts.asc()).offset(no-1).first_or_404()
+    trivia = get_published(no)
     resp = jsonify(trivia.to_dict())
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
 @bp.route("/api/random", methods=["GET"])
 def api_random_trivia():
-    n = get_published_count()
-    return redirect(url_for("trivia.api_specific_trivia", no=randint(1, int(n))))
+    n = get_random_published_id()
+    return redirect(url_for("trivia.api_specific_trivia", no=n))
