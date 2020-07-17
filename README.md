@@ -1,9 +1,11 @@
 ## Installation
 
 ```bash
-virtualenv trivia_env
+python3 -m venv trivia_env
 . trivia_env/bin/activate
 pip install -r requirements.txt
+cp config.py.template config.py
+(adjust config.py)
 ```
 
 ## Init for local test
@@ -16,7 +18,7 @@ flask db migrate
 flask db upgrade
 flask run -h localhost
 ```
-Open (trivia page on localhost)[http://127.0.0.1:5000/\_\_install\_\_] and create admin account.
+Open [trivia page on localhost](http://127.0.0.1:5000/\_\_install\_\_) and create admin account.
 
 ## Local test
 

@@ -30,6 +30,7 @@ class GeneralSetting(db.Model):
     __tablename__ = "general_settings"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(64))
+    bot_token = db.Column(db.String(64))
 
 class Category(db.Model):
     __tablename__ = "categories"

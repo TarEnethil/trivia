@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify, send_from_directory
 from app import app, db
 from app.trivia import bp
-from app.helpers import page_title, redirect_non_admins, get_published_count, get_published_count_cat
+from app.helpers import page_title, redirect_non_admins, get_published_count, get_published_count_cat, publish_trivia, get_random_ready, send_to_owner, send_to_channel, get_ready_count, get_bot_token, gen_new_bot_token
 from app.trivia.forms import CategoryForm, TriviaForm
 from app.forms import SettingsForm
 from app.models import User, Category, Trivia, Lane, GeneralSetting
@@ -174,26 +174,9 @@ def lane_new_trivia(id):
 @bp.route("/publish/<int:id>", methods=["GET", "POST"])
 @login_required
 def lane_publish_trivia(id):
-    trivia = Trivia.query.get(id)
-
-    trivia.lane = 3
-    trivia.lane_switch_ts = datetime.utcnow()
-
-    prepend = "Trivia #" + get_published_count()
-
-    if trivia.category != 1:
-        c = Category.query.get(trivia.category)
-        prepend += ", " + c.abbr + " #" + get_published_count_cat(trivia.category)
-
-    if trivia.sent_by:
-        prepend += ", Fremdeinsendung von " + trivia.sent_by
-
-    prepend += ": "
-
-    trivia.description = prepend + trivia.description
+    publish_trivia(id)
 
     flash("Trivia published.")
-    db.session.commit()
 
     return redirect(url_for("trivia.index"))
 
@@ -257,6 +240,45 @@ def category_edit(id):
     form.color.data = category.color
     form.abbr.data = category.abbr
     return render_template("trivia/category.html", form=form, category=category, title=page_title("Edit category"))
+
+@bp.route("/bot/publish", methods=["GET"])
+def bot_publish():
+    if app.config["TELEGRAM_TOKEN"] != None:
+        url_token = request.args.get('token')
+        our_token = get_bot_token()
+
+        if url_token == None or url_token != our_token:
+            return jsonify({"success": False}), 403
+
+        t = get_random_ready()
+
+        if t == None:
+            send_to_owner("I was triggered to send a trivia, but there was none left!")
+            return jsonify({"success": False}), 503
+
+        publish_trivia(t.id)
+
+        send_to_channel(t.description + "\n\nSent by @ThorstensTriviaBot")
+
+        msg_to_owner = ""
+
+        if app.config["TELEGRAM_ALWAYS_REPORT"]:
+            msg_to_owner = "I just posted the Trivia '{}' to the channel.\n".format(t.title)
+
+        ready = get_ready_count()
+
+        warn = app.config["TELEGRAM_WARN_COUNT"]
+        if warn and ready < warn:
+            msg_to_owner += "Warning: "
+
+        if app.config["TELEGRAM_ALWAYS_REPORT"] or (warn and ready < warn):
+            msg_to_owner += "There are {} trivia left in the 'ready' lane.".format(ready)
+
+        if msg_to_owner != "":
+            send_to_owner(msg_to_owner)
+
+        gen_new_bot_token()
+        return jsonify({"success": True}), 200
 
 @bp.route("/api/", methods=["GET"])
 def api_index():

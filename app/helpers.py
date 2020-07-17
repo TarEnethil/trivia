@@ -1,10 +1,14 @@
-from app import app
+from app import app, db
 from flask import flash, redirect
-from app.models import GeneralSetting, Trivia
+from app.models import GeneralSetting, Trivia, Category
+from datetime import datetime
 from flask_login import current_user
 from werkzeug import secure_filename
 from wtforms.validators import ValidationError
+from random import choice
+import telebot
 import os
+from uuid import uuid4
 
 def redirect_non_admins():
     if not current_user.has_admin_role():
@@ -28,6 +32,63 @@ def get_published_count():
 def get_published_count_cat(cat_id):
     q = Trivia.query.filter(Trivia.lane == 3).filter(Trivia.category == cat_id)
     return str(q.count())
+
+def get_ready_count():
+    q = Trivia.query.filter(Trivia.lane == 2)
+
+    return q.count()
+
+def get_random_ready():
+    q = Trivia.query.filter(Trivia.lane == 2)
+
+    if q.count() == 0:
+        return None
+    else:
+        return choice(q.all())
+
+def get_bot_token():
+    return GeneralSetting.query.get(1).bot_token
+
+def gen_new_bot_token():
+    g = GeneralSetting.query.get(1)
+
+    g.bot_token = str(uuid4())
+
+    db.session.commit()
+
+def publish_trivia(id):
+    trivia = Trivia.query.filter_by(id=id).first_or_404()
+
+    trivia.lane = 3
+    trivia.lane_switch_ts = datetime.utcnow()
+
+    prepend = "Trivia #" + get_published_count()
+
+    if trivia.category != 1:
+        c = Category.query.get(trivia.category)
+        prepend += ", " + c.abbr + " #" + get_published_count_cat(trivia.category)
+
+    if trivia.sent_by:
+        prepend += ", Fremdeinsendung von " + trivia.sent_by
+
+    prepend += ": "
+
+    trivia.description = prepend + trivia.description
+    db.session.commit()
+
+def send_to_owner(msg):
+    if app.config["TELEGRAM_TOKEN"] == None or app.config["TELEGRAM_OWNER_CHAT_ID"] == None:
+        return
+
+    bot = telebot.TeleBot(app.config["TELEGRAM_TOKEN"])
+    bot.send_message(app.config["TELEGRAM_OWNER_CHAT_ID"], msg)
+
+def send_to_channel(msg):
+    if app.config["TELEGRAM_TOKEN"] == None or app.config["TELEGRAM_CHANNEL_CHAT_ID"] == None:
+        return
+
+    bot = telebot.TeleBot(app.config["TELEGRAM_TOKEN"])
+    bot.send_message(app.config["TELEGRAM_CHANNEL_CHAT_ID"], msg)
 
 class LessThanOrEqual(object):
     def __init__(self, comp_value_field_name):
