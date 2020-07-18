@@ -1,4 +1,4 @@
-from app import app, db
+from app import app, db, bot
 from flask import flash, redirect
 from app.models import GeneralSetting, Trivia, Category
 from datetime import datetime
@@ -84,17 +84,15 @@ def publish_trivia(id):
     db.session.commit()
 
 def send_to_owner(msg):
-    if app.config["TELEGRAM_TOKEN"] == None or app.config["TELEGRAM_OWNER_CHAT_ID"] == None:
+    if bot == None or app.config["TELEGRAM_OWNER_CHAT_ID"] == None:
         return
 
-    bot = telebot.TeleBot(app.config["TELEGRAM_TOKEN"])
     bot.send_message(app.config["TELEGRAM_OWNER_CHAT_ID"], msg)
 
 def send_to_channel(msg):
-    if app.config["TELEGRAM_TOKEN"] == None or app.config["TELEGRAM_CHANNEL_CHAT_ID"] == None:
+    if bot == None or app.config["TELEGRAM_CHANNEL_CHAT_ID"] == None:
         return
 
-    bot = telebot.TeleBot(app.config["TELEGRAM_TOKEN"])
     bot.send_message(app.config["TELEGRAM_CHANNEL_CHAT_ID"], msg)
 
 class LessThanOrEqual(object):

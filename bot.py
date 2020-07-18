@@ -1,9 +1,8 @@
 #!venv/bin/python
 
-from app import app, db
+from app import app, db, bot
 from app.models import Trivia
 from app.helpers import get_published, get_random_published_id, get_published_count
-from uuid import uuid4
 from datetime import datetime
 import re
 
@@ -11,11 +10,9 @@ import telebot
 
 rgx = re.compile("/trivia (\d+)")
 
-if app.config["TELEGRAM_TOKEN"] == None:
+if bot == None:
     print("no token configured")
     exit(1)
-
-bot = telebot.TeleBot(app.config["TELEGRAM_TOKEN"])
 
 def log_message(message):
     if app.config["TELEGRAM_BOT_LOG"] == None or app.config["TELEGRAM_BOT_LOG"] == False:
