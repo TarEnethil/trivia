@@ -25,7 +25,7 @@ if app.config["TELEGRAM_TOKEN"] != None:
 
         time.sleep(0.2)
 
-        wurl = "%s/bot/update/%s/".format(app.config["TELEGRAM_WEBHOOK_HOST"], app.config["TELEGRAM_TOKEN"])
+        wurl = "{}/bot/update/{}/".format(app.config["TELEGRAM_WEBHOOK_HOST"], app.config["TELEGRAM_TOKEN"])
         bot.set_webhook(url=url)
 
 from app.user import bp as user_bp
