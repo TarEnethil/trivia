@@ -17,6 +17,7 @@ bootstrap = Bootstrap(app)
 
 bot = None
 
+# TODO: this gets executed on every request (?) so setting webhook multiple times fails easily
 if app.config["TELEGRAM_TOKEN"] != None:
     bot = telebot.TeleBot(app.config["TELEGRAM_TOKEN"])
 
