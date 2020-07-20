@@ -36,7 +36,7 @@ def send_welcome(message):
     msg += "/trivia <number>\n"
     msg += "        get published trivia #<number>"
     msg += "\n\nThere are currently {} published facts.\n".format(get_published_count())
-    msg += "If you find any bugs, feel free to report them to @TriviaThorsten or at https://tarenethil.github.com/trivia/issues"
+    msg += "If you find any bugs, feel free to report them to @TriviaThorsten or at https://github.com/tarenethil/trivia/issues"
 
     if app.config["TELEGRAM_BOT_LOG"] == True:
         msg += "\n\nNote: For debugging purposes, all messages are currently logged."
