@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <h1>Bot Status</h1>
+
+    <ul>
+        <li>
+            Configured:
+
+            {% if configured %}
+                yes
+            {% else %}
+                no (set TELEGRAM_WEBHOOK_HOST in config.py)
+            {% endif %}
+        </li>
+
+        {% if configured %}
+        <li>
+            Webhook active:
+
+            {% if webhook_active %}
+                {% if webhook_warning %}
+                    yes, but wrong url ({{ webhook_url }}, <a href="{{ url_for('trivia.bot_webhook_activate') }}">refresh webhook</a>)
+                {% else %}
+                    yes ({{ webhook_url }}, <a href="{{ url_for('trivia.bot_webhook_deactivate') }}">deactivate webhook</a>)
+                {% endif %}
+            {% else %}
+                no (<a href="{{ url_for('trivia.bot_webhook_activate') }}">activate webhook</a>)
+            {% endif %}
+        </li>
+        {% endif %}
+    </ul>
+{% endblock %}

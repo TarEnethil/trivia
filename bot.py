@@ -14,6 +14,7 @@ if bot == None:
     print("no token configured")
     exit(1)
 
+
 def log_message(message):
     if app.config["TELEGRAM_BOT_LOG"] == None or app.config["TELEGRAM_BOT_LOG"] == False:
         return

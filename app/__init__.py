@@ -21,14 +21,6 @@ bot = None
 if app.config["TELEGRAM_TOKEN"] != None:
     bot = telebot.TeleBot(app.config["TELEGRAM_TOKEN"])
 
-    if app.config["TELEGRAM_WEBHOOK_HOST"] != None:
-        bot.remove_webhook()
-
-        time.sleep(0.2)
-
-        wurl = "{}/bot/update/{}/".format(app.config["TELEGRAM_WEBHOOK_HOST"], app.config["TELEGRAM_TOKEN"])
-        bot.set_webhook(url=url)
-
 from app.user import bp as user_bp
 app.register_blueprint(user_bp, url_prefix="/user")
 

@@ -12,6 +12,7 @@ from random import randint
 import telebot
 import os
 import re
+import time
 
 @bp.route("/")
 @login_required
@@ -243,6 +244,75 @@ def category_edit(id):
     form.abbr.data = category.abbr
     return render_template("trivia/category.html", form=form, category=category, title=page_title("Edit category"))
 
+@bp.route("/bot/", methods=["GET"])
+@login_required
+def bot_index():
+    redirect_non_admins()
+
+    if bot != None and app.config["TELEGRAM_WEBHOOK_HOST"] != None:
+        configured = True
+
+        status = bot.get_webhook_info()
+
+        if not status.url or status.url == '':
+            webhook_active = False
+            webhook_url = None
+            webhook_warning = False
+        elif status.url != "{}/bot/update/{}/".format(app.config["TELEGRAM_WEBHOOK_HOST"], app.config["TELEGRAM_TOKEN"]):
+            webhook_active = True
+            webhook_warning = True
+            webhook_url = status.url
+        else:
+            webhook_active = True
+            webhook_warning = False
+            webhook_url = status.url
+
+        return render_template("trivia/bot.html", configured=configured, webhook_active=webhook_active, webhook_warning=webhook_warning, webhook_url=webhook_url)
+    else:
+        return render_template("trivia/bot.html", configured=False)
+
+@bp.route("/bot/webhook/activate", methods=["GET"])
+@login_required
+def bot_webhook_activate():
+    if app.config["TELEGRAM_WEBHOOK_HOST"] != None and bot != None:
+        wurl = "{}/bot/update/{}/".format(app.config["TELEGRAM_WEBHOOK_HOST"], app.config["TELEGRAM_TOKEN"])
+
+        webhook = bot.get_webhook_info()
+
+        if not webhook.url or webhook.url == '' or webhook.url != wurl:
+            try:
+                print("trying to register webhook url {}".format(wurl))
+                bot.remove_webhook()
+                time.sleep(0.2)
+                bot.set_webhook(url=wurl)
+            except:
+                flash("something went wrong while disabling + enabling the webhook", "danger")
+                return redirect(url_for("trivia.bot_index"))
+
+            flash("webhook was enabled", "success")
+        else:
+            flash("webhook was still active and correct, did not take action", "warning")
+    else:
+        flash("not all configs for bots are enabled...", "danger")
+
+    return redirect(url_for("trivia.bot_index"))
+
+@bp.route("/bot/webhook/deactivate", methods=["GET"])
+@login_required
+def bot_webhook_deactivate():
+    if app.config["TELEGRAM_WEBHOOK_HOST"] != None and bot != None:
+        try:
+            bot.remove_webhook()
+        except:
+            flash("something went wrong while disabling the webhook", "danger")
+            return redirect(url_for("trivia.bot_index"))
+
+            flash("webhook was disabled", "success")
+    else:
+        flash("not all configs for bots are enabled...", "danger")
+
+    return redirect(url_for("trivia.bot_index"))
+
 @bp.route("/bot/publish", methods=["GET"])
 def bot_publish():
     if bot != None:
@@ -283,7 +353,7 @@ def bot_publish():
         return jsonify({"success": True}), 200
 
 if app.config["TELEGRAM_WEBHOOK_HOST"] != None:
-    @bp.route("/bot/update/%s".format(app.config["TELEGRAM_TOKEN"]), methods=["POST"])
+    @bp.route("/bot/update/{}".format(app.config["TELEGRAM_TOKEN"]), methods=["POST"])
     def webhook():
         if request.headers.get('content-type') == 'application/json':
             json_string = request.get_data().decode('utf-8')
