@@ -267,9 +267,9 @@ def bot_index():
             webhook_warning = False
             webhook_url = status.url
 
-        return render_template("trivia/bot.html", configured=configured, webhook_active=webhook_active, webhook_warning=webhook_warning, webhook_url=webhook_url)
+        return render_template("trivia/bot.html", configured=configured, webhook_active=webhook_active, webhook_warning=webhook_warning, webhook_url=webhook_url, title=page_title("Bot Status"))
     else:
-        return render_template("trivia/bot.html", configured=False)
+        return render_template("trivia/bot.html", configured=False, title=page_title("Bot Status"))
 
 @bp.route("/bot/webhook/activate", methods=["GET"])
 @login_required
@@ -353,7 +353,7 @@ def bot_publish():
         return jsonify({"success": True}), 200
 
 if app.config["TELEGRAM_WEBHOOK_HOST"] != None:
-    @bp.route("/bot/update/{}".format(app.config["TELEGRAM_TOKEN"]), methods=["POST"])
+    @bp.route("/bot/update/{}/".format(app.config["TELEGRAM_TOKEN"]), methods=["POST"])
     def webhook():
         if request.headers.get('content-type') == 'application/json':
             json_string = request.get_data().decode('utf-8')
