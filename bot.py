@@ -1,6 +1,6 @@
 #!venv/bin/python
 
-from app import app, db, bot
+from app import create_app, db, bot
 from app.models import Trivia
 from app.helpers import get_published, get_random_published_id, get_published_count
 from datetime import datetime
@@ -9,6 +9,8 @@ import re
 import telebot
 
 rgx = re.compile("/trivia (\d+)")
+
+app = create_app()
 
 if bot == None:
     print("no token configured")

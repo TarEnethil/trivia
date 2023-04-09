@@ -1,9 +1,7 @@
-from app import app, db, bot
-from flask import flash, redirect
+from flask import flash, redirect, current_app
 from app.models import GeneralSetting, Trivia, Category
 from datetime import datetime
 from flask_login import current_user
-from werkzeug import secure_filename
 from wtforms.validators import ValidationError
 from random import choice, randint
 import telebot
@@ -56,14 +54,14 @@ def get_random_ready():
 def get_bot_token():
     return GeneralSetting.query.get(1).bot_token
 
-def gen_new_bot_token():
+def gen_new_bot_token(db):
     g = GeneralSetting.query.get(1)
 
     g.bot_token = str(uuid4())
 
     db.session.commit()
 
-def publish_trivia(id):
+def publish_trivia(db, id):
     trivia = Trivia.query.filter_by(id=id).first_or_404()
 
     trivia.lane = 3
@@ -83,17 +81,17 @@ def publish_trivia(id):
     trivia.description = prepend + trivia.description
     db.session.commit()
 
-def send_to_owner(msg):
-    if bot == None or app.config["TELEGRAM_OWNER_CHAT_ID"] == None:
+def send_to_owner(bot, msg):
+    if bot == None or current_app.config["TELEGRAM_OWNER_CHAT_ID"] == None:
         return
 
-    bot.send_message(app.config["TELEGRAM_OWNER_CHAT_ID"], msg)
+    bot.send_message(current_app.config["TELEGRAM_OWNER_CHAT_ID"], msg)
 
-def send_to_channel(msg):
-    if bot == None or app.config["TELEGRAM_CHANNEL_CHAT_ID"] == None:
+def send_to_channel(bot, msg):
+    if bot == None or current_app.config["TELEGRAM_CHANNEL_CHAT_ID"] == None:
         return
 
-    bot.send_message(app.config["TELEGRAM_CHANNEL_CHAT_ID"], msg)
+    bot.send_message(current_app.config["TELEGRAM_CHANNEL_CHAT_ID"], msg)
 
 class LessThanOrEqual(object):
     def __init__(self, comp_value_field_name):

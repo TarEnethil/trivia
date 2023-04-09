@@ -5,3 +5,4 @@ app/*.pyc
 venv/
 config.py
 !cron.sh
+!entrypoint.sh

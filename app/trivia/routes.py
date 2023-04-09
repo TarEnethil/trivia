@@ -1,12 +1,11 @@
-from flask import render_template, flash, redirect, url_for, request, jsonify, send_from_directory
-from app import app, db, bot
+from flask import render_template, flash, redirect, url_for, request, jsonify, current_app
+from app import db, bot
 from app.trivia import bp
 from app.helpers import page_title, redirect_non_admins, get_published_count, get_published_count_cat, publish_trivia, get_random_ready, send_to_owner, send_to_channel, get_ready_count, get_bot_token, gen_new_bot_token, get_random_published_id, get_published
 from app.trivia.forms import CategoryForm, TriviaForm
-from app.forms import SettingsForm
+from app.main.forms import SettingsForm
 from app.models import User, Category, Trivia, Lane, GeneralSetting
 from flask_login import current_user, login_required
-from werkzeug import secure_filename
 from datetime import datetime
 from random import randint
 import telebot
@@ -177,7 +176,7 @@ def lane_new_trivia(id):
 @bp.route("/publish/<int:id>", methods=["GET", "POST"])
 @login_required
 def lane_publish_trivia(id):
-    publish_trivia(id)
+    publish_trivia(db, id)
 
     flash("Trivia published.")
 
@@ -243,198 +242,6 @@ def category_edit(id):
     form.color.data = category.color
     form.abbr.data = category.abbr
     return render_template("trivia/category.html", form=form, category=category, title=page_title("Edit category"))
-
-@bp.route("/bot/", methods=["GET"])
-@login_required
-def bot_index():
-    redirect_non_admins()
-
-    if bot != None and app.config["TELEGRAM_WEBHOOK_HOST"] != None:
-        configured = True
-
-        status = bot.get_webhook_info()
-
-        if not status.url or status.url == '':
-            webhook_active = False
-            webhook_url = None
-            webhook_warning = False
-        elif status.url != "{}/bot/update/{}/".format(app.config["TELEGRAM_WEBHOOK_HOST"], app.config["TELEGRAM_TOKEN"]):
-            webhook_active = True
-            webhook_warning = True
-            webhook_url = status.url
-        else:
-            webhook_active = True
-            webhook_warning = False
-            webhook_url = status.url
-
-        return render_template("trivia/bot.html", configured=configured, webhook_active=webhook_active, webhook_warning=webhook_warning, webhook_url=webhook_url, title=page_title("Bot Status"))
-    else:
-        return render_template("trivia/bot.html", configured=False, title=page_title("Bot Status"))
-
-@bp.route("/bot/webhook/activate", methods=["GET"])
-@login_required
-def bot_webhook_activate():
-    if app.config["TELEGRAM_WEBHOOK_HOST"] != None and bot != None:
-        wurl = "{}/bot/update/{}/".format(app.config["TELEGRAM_WEBHOOK_HOST"], app.config["TELEGRAM_TOKEN"])
-
-        webhook = bot.get_webhook_info()
-
-        if not webhook.url or webhook.url == '' or webhook.url != wurl:
-            try:
-                print("trying to register webhook url {}".format(wurl))
-                bot.remove_webhook()
-                time.sleep(0.2)
-                bot.set_webhook(url=wurl)
-            except:
-                flash("something went wrong while disabling + enabling the webhook", "danger")
-                return redirect(url_for("trivia.bot_index"))
-
-            flash("webhook was enabled", "success")
-        else:
-            flash("webhook was still active and correct, did not take action", "warning")
-    else:
-        flash("not all configs for bots are enabled...", "danger")
-
-    return redirect(url_for("trivia.bot_index"))
-
-@bp.route("/bot/webhook/deactivate", methods=["GET"])
-@login_required
-def bot_webhook_deactivate():
-    if app.config["TELEGRAM_WEBHOOK_HOST"] != None and bot != None:
-        try:
-            bot.remove_webhook()
-        except:
-            flash("something went wrong while disabling the webhook", "danger")
-            return redirect(url_for("trivia.bot_index"))
-
-            flash("webhook was disabled", "success")
-    else:
-        flash("not all configs for bots are enabled...", "danger")
-
-    return redirect(url_for("trivia.bot_index"))
-
-@bp.route("/bot/publish", methods=["GET"])
-def bot_publish():
-    if bot != None:
-        url_token = request.args.get('token')
-        our_token = get_bot_token()
-
-        if url_token == None or url_token != our_token:
-            return jsonify({"success": False}), 403
-
-        t = get_random_ready()
-
-        if t == None:
-            send_to_owner("I was triggered to send a trivia, but there was none left!")
-            return jsonify({"success": False}), 503
-
-        publish_trivia(t.id)
-
-        send_to_channel(t.description + "\n\nSent by @ThorstensTriviaBot")
-
-        msg_to_owner = ""
-
-        if app.config["TELEGRAM_ALWAYS_REPORT"]:
-            msg_to_owner = "I just posted the Trivia '{}' to the channel.\n".format(t.title)
-
-        ready = get_ready_count()
-
-        warn = app.config["TELEGRAM_WARN_COUNT"]
-        if warn and ready < warn:
-            msg_to_owner += "Warning: "
-
-        if app.config["TELEGRAM_ALWAYS_REPORT"] or (warn and ready < warn):
-            msg_to_owner += "There are {} trivia left in the 'ready' lane.".format(ready)
-
-        if msg_to_owner != "":
-            send_to_owner(msg_to_owner)
-
-        gen_new_bot_token()
-        return jsonify({"success": True}), 200
-
-if app.config["TELEGRAM_WEBHOOK_HOST"] != None:
-    @bp.route("/bot/update/{}/".format(app.config["TELEGRAM_TOKEN"]), methods=["POST"])
-    def webhook():
-        if request.headers.get('content-type') == 'application/json':
-            json_string = request.get_data().decode('utf-8')
-            update = telebot.types.Update.de_json(json_string)
-            bot.process_new_updates([update])
-            return ''
-        else:
-            flask.abort(403)
-
-rgx = re.compile("/trivia (\d+)")
-
-def log_message(message):
-    if app.config["TELEGRAM_BOT_LOG"] == None or app.config["TELEGRAM_BOT_LOG"] == False:
-        return
-
-    if message.from_user.username:
-        user = message.from_user.username
-    else:
-        user = message.from_user.first_name
-
-    print("{}: {} sent message '{}'".format(datetime.fromtimestamp(message.date), user, message.text))
-
-if bot != None:
-    @bot.message_handler(commands=['start', 'help'])
-    def send_welcome(message):
-        log_message(message)
-        msg = "Hello @{}!\n\n".format(message.from_user.username)
-        msg += "I am @ThorstensTriviaBot (WIP). I currently support the following commands:\n\n"
-        msg += "/random, /trivia\n"
-        msg += "        get a random published fact\n"
-        msg += "/trivia <number>\n"
-        msg += "        get published trivia #<number>"
-        msg += "\n\nThere are currently {} published facts.\n".format(get_published_count())
-        msg += "If you find any bugs, feel free to report them to @TriviaThorsten or at https://github.com/tarenethil/trivia/issues"
-
-        if app.config["TELEGRAM_BOT_LOG"] == True:
-            msg += "\n\nNote: For debugging purposes, all messages are currently logged."
-
-        bot.send_message(message.chat.id, msg)
-
-    @bot.message_handler(commands=['random'])
-    def random_trivia(message):
-        log_message(message)
-        t = get_published(get_random_published_id())
-
-        bot.send_message(message.chat.id, t.description)
-
-    @bot.message_handler(commands=['trivia'])
-    def trivia(message):
-        log_message(message)
-        if message.text == "/trivia":
-            random_trivia(message)
-            return
-
-        m = rgx.match(message.text)
-
-        if m == None:
-            bot.reply_to(message, "I could not extract a valid fact id from your query.")
-            return
-
-        try:
-            tid = int(m.group(1))
-        except:
-            bot.reply_to(message, "I could not extract valid fact id from your query (target was {}).".format(m.group(1)))
-            return
-
-        if tid <= 0:
-            bot.reply_to(message, "{} is not a valid fact id.".format(tid))
-            return
-
-        t = Trivia.query.filter(Trivia.lane==3).order_by(Trivia.lane_switch_ts.asc()).offset(tid-1).first()
-
-        if t == None:
-            bot.reply_to(message, "Sorry, I could not find the fact with id {}.".format(tid))
-            return
-
-        bot.send_message(message.chat.id, t.description)
-
-    @bot.message_handler(func=lambda m: True)
-    def default(message):
-        log_message(message)
 
 @bp.route("/api/", methods=["GET"])
 def api_index():

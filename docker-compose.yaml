@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  trivia:
+    image: trivia:latest
+    container_name: trivia
+    restart: unless-stopped
+    ports:
+      - 8337:5000
+    volumes:
+      - ./config:/home/trivia/config
+      - ./data:/home/trivia/data

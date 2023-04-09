@@ -1,4 +1,3 @@
-from app import app, db
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
 from app.helpers import LessThanOrEqual, GreaterThanOrEqual

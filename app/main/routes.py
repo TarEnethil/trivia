@@ -1,13 +1,14 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify, send_from_directory
-from app import app, db
+from app import db
+from app.main import bp
 from app.helpers import page_title, redirect_non_admins
-from app.forms import LoginForm, SettingsForm, InstallForm
+from app.main.forms import LoginForm, SettingsForm, InstallForm
 from app.models import User, Category, GeneralSetting, Lane
 from flask_login import current_user, login_user, login_required, logout_user
 from datetime import datetime
 from werkzeug.urls import url_parse
 
-@app.before_request
+@bp.before_app_request
 def before_request():
     if current_user.is_authenticated:
         current_user.last_seen = datetime.utcnow()
@@ -18,7 +19,7 @@ def before_request():
             flash("You must change your password before proceeding")
             return redirect(url)
 
-@app.route("/login", methods=["GET", "POST"])
+@bp.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("trivia.index"))
@@ -42,12 +43,12 @@ def login():
 
     return render_template("login.html", title=page_title("Login"), form=form)
 
-@app.route("/logout")
+@bp.route("/logout")
 def logout():
     logout_user()
     return redirect(url_for("trivia.index"))
 
-@app.route("/__install__", methods=["GET", "POST"])
+@bp.route("/__install__", methods=["GET", "POST"])
 def install():
     if not GeneralSetting.query.get(1):
         form = InstallForm()
@@ -85,7 +86,3 @@ def install():
     else:
         flash("Setup was already executed.")
         return redirect(url_for("trivia.index"))
-
-@app.route("/static_files/<path:filename>")
-def static_files(filename):
-    return send_from_directory(app.config["STATIC_DIR"], filename)

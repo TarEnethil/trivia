@@ -1,30 +1,46 @@
 from flask import Flask
-from config import Config
+from config.config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_bootstrap import Bootstrap
+from app.bot import setup_bot
 import telebot
-import time
 
-app = Flask(__name__)
-app.config.from_object(Config)
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-login = LoginManager(app)
-login.login_view = 'login'
-bootstrap = Bootstrap(app)
 
+db = SQLAlchemy()
+migrate = Migrate()
+login = LoginManager()
+bootstrap = Bootstrap()
 bot = None
 
-# TODO: this gets executed on every request (?) so setting webhook multiple times fails easily
-if app.config["TELEGRAM_TOKEN"] != None:
-    bot = telebot.TeleBot(app.config["TELEGRAM_TOKEN"])
+def create_app(config=Config):
+    app = Flask(__name__)
 
-from app.user import bp as user_bp
-app.register_blueprint(user_bp, url_prefix="/user")
+    app.config.from_object(config)
 
-from app.trivia import bp as trivia_bp
-app.register_blueprint(trivia_bp)
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login.init_app(app)
+    login.login_view = 'main.login'
+    bootstrap.init_app(app)
 
-from app import routes, models
+    if app.config["TELEGRAM_TOKEN"] != None:
+        bot = telebot.TeleBot(app.config["TELEGRAM_TOKEN"], threaded=False)
+        app.config["BOT"] = bot
+
+    from app.main import bp as main_bp
+    app.register_blueprint(main_bp)
+
+    from app.user import bp as user_bp
+    app.register_blueprint(user_bp, url_prefix="/user")
+
+    from app.trivia import bp as trivia_bp
+    if bot is not None:
+        setup_bot(app, trivia_bp, bot)
+    app.register_blueprint(trivia_bp)
+
+
+    return app
+
+from app import models
