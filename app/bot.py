@@ -195,6 +195,25 @@ def setup_bot(app, bp, bot):
 
         bot.send_message(message.chat.id, t.description)
 
+    def admin_add_message(message):
+        print(message)
+        return message.chat.id == app.config["TELEGRAM_OWNER_CHAT_ID"]
+
+    @bot.message_handler(func=admin_add_message)
+    def admin_add(message):
+        from app import db
+        from app.helpers import add_new_trivia
+
+        trivia_text = None
+        if message.text.startswith("/add "):
+            trivia_text = message.text[len("/add "):]
+        elif "http" in message.text:
+            trivia_text = message.text
+
+        if trivia_text != None:
+            add_new_trivia(db, "Added via Telegram", trivia_text)
+            bot.reply_to(message, "Trivia added")
+
     @bot.message_handler(func=lambda m: True)
     def default(message):
         log_message(message)

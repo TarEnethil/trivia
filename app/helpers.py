@@ -21,6 +21,11 @@ def page_title(dynamic_part=None):
     else:
         return static_part
 
+def add_new_trivia(db, title, desc):
+    trivia = Trivia(title=title, description=desc, category=1, lane=1)
+    db.session.add(trivia)
+    db.session.commit()
+
 def get_published_count():
     q = Trivia.query.filter(Trivia.lane == 3)
     # count_q = q.statement.with_only_columns([func.count()]).order_by(None)
