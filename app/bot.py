@@ -187,7 +187,7 @@ def setup_bot(app, bp, bot):
             bot.reply_to(message, "{} is not a valid fact id.".format(tid))
             return
 
-        t = Trivia.query.filter(Trivia.lane==3).order_by(Trivia.lane_switch_ts.asc()).offset(tid-1).first()
+        t = get_published(tid)
 
         if t == None:
             bot.reply_to(message, "Sorry, I could not find the fact with id {}.".format(tid))
