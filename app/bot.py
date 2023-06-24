@@ -187,7 +187,7 @@ def setup_bot(app, bp, bot):
             bot.reply_to(message, "{} is not a valid fact id.".format(tid))
             return
 
-        t = get_published(tid)
+        t = get_published(tid, direct404=False)
 
         if t == None:
             bot.reply_to(message, "Sorry, I could not find the fact with id {}.".format(tid))

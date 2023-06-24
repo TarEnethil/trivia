@@ -41,8 +41,10 @@ def get_ready_count():
 
     return q.count()
 
-def get_published(no):
-    return Trivia.query.filter(Trivia.lane==3).order_by(Trivia.lane_switch_ts.asc()).offset(no-1).first_or_404()
+def get_published(no, direct404=True):
+    q = Trivia.query.filter(Trivia.lane==3).order_by(Trivia.lane_switch_ts.asc()).offset(no-1)
+
+    return q.first_or_404() if direct404 else q.first()
 
 def get_random_published_id():
     n = get_published_count()
